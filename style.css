@@ -1,0 +1,85 @@
+/*side border for effect*/
+*
+{
+    box-sizing: border-box;
+}
+body
+{
+    font-family: system-ui, sans-serif;
+    background: whitesmoke;
+    color: black;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 16px;
+}
+header
+{
+    margin-bottom: 20px;
+}
+header h1
+{
+    margin: 0;
+}
+#today-date
+{
+    color: dimgray;
+    margin: 4px 0 0;
+}
+.add-block,.timeline-section
+{
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px lightgray;
+}
+form
+{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+input, select, button
+{
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid lightgray;
+}
+.row
+{
+    display: flex;
+   
+}
+.row input
+{
+    flex: 1;
+}
+button
+{
+    background: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover
+{
+    background: dimgray;
+}
+#message
+{
+    color: crimson;
+    
+}
+.block
+{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: whitesmoke;
+    
+}
+.block-info small
+{
+    color: dimgray;
+}

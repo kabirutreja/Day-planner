@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Time blocker</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <!--prolly date.now-->
+        <header>
+        <h1>My Day</h1>
+        <p id="today-date"></p>
+        </header>
+        <main>
+            <!--would make the system change by adding dragging time blocking rather than manual entry-->
+            <section class="add-block">
+                <h2>Add a block</h2>
+                <form id="block-form">
+                    <input type="text" id="title" placeholder="What are you doing?" required>
+                    <div class="row">
+                        <input type="time" id="start" required>
+                        <input type="time" id="end" required>
+                    </div>
+                    <select id="category">
+                        <option value="PART-A">Part-A</option>
+                        <option value="PART-B">Part-B</option>
+                        <option value="PYQ'S">PYQ'S</option>
+                        <option value="SKETCHING">Sketching</option>
+                        <option value="Test">Test</option>
+                        <option value="SURVIVE">Survive</option>
+                        <option value="TERRA">Terra</option>
+                        <option value="WRONG/PIXL">Wrong/pixl</option>
+                        <option value="CROSSROADS">Crossroads</option>
+                        <option value="EMBASSY">Embassy</option>
+                        <option value="GYM">Gym</option>
+                        <option value="REST">Rest</option>
+                    </select>
+                    <button type="submit">Add block</button>
+                </form>
+                <p id="message"></p>
+            </section>
+
+            <section class="timeline-section">
+                <h2>Timeline</h2>
+                <div id="timeline"></div>
+            </section>
+        </main>
+        <script src="app.js"></script>
+    </body>
+</html>
