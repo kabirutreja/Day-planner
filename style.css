@@ -49,7 +49,7 @@ input, select, button
 .row
 {
     display: flex;
-   
+    gap: 10px;
 }
 .row input
 {
@@ -69,7 +69,7 @@ button:hover
 #message
 {
     color: crimson;
-    
+    min-height: 1em;
 }
 .block
 {
@@ -77,9 +77,47 @@ button:hover
     justify-content: space-between;
     align-items: center;
     background: whitesmoke;
-    
+    border-left: 6px solid grey;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
 }
 .block-info small
 {
     color: dimgray;
 }
+.cat-part-a      { border-left-color: steelblue; }
+.cat-part-b      { border-left-color: slateblue; }
+.cat-pyqs        { border-left-color: mediumpurple; }
+.cat-sketching   { border-left-color: hotpink; }
+.cat-test        { border-left-color: tomato; }
+.cat-survive     { border-left-color: orange; }
+.cat-terra       { border-left-color: seagreen; }
+.cat-wrong-pixl  { border-left-color: goldenrod; }
+.cat-crossroads  { border-left-color: teal; }
+.cat-embassy     { border-left-color: saddlebrown; }
+.cat-gym         { border-left-color: darkorange; }
+.cat-rest        { border-left-color: slategray; }
+.block.done strong
+{
+    text-decoration: line-through;
+}
+.block-actions button
+{
+    background: none;
+    color: dimgray;
+    padding: 4px 8px;
+}
+.block-actions button:hover
+{
+    background: none;
+    color: crimson;
+}
+.empty
+{
+    color: grey;
+    text-align: center;
+}
+
+/*calendar styling*/
+
