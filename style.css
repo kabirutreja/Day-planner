@@ -102,13 +102,13 @@ button:hover
 {
     text-decoration: line-through;
 }
-.block-actions button
+.event .block-actions button
 {
     background: none;
     color: dimgray;
     padding: 4px 8px;
 }
-.block-actions button:hover
+.event .block-actions button:hover
 {
     background: none;
     color: crimson;
@@ -120,4 +120,83 @@ button:hover
 }
 
 /*calendar styling*/
-
+.hint
+{
+    color: dimgray;
+    font-size: 14px;
+}
+.calendar
+{
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+.hour-labels
+{
+    width: 48px;
+    flex-shrink: 0;
+}
+.hour-label
+{
+    font-size: 12px;
+    color: grey;
+}
+.day-column
+{
+    position: relative;
+    flex: 1;
+    background: whitesmoke;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: crosshair;
+    /*one line each 40px*/
+    background-image: repeating-linear-gradient(to bottom, lightgray 1px, transparent 1px, transparent 40px);
+    touch-action: none;
+    /*for phone*/
+}
+.event
+{
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    background: white;
+    border-left-width: 4px;
+    border-left-style: solid;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 13px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px lightgray;
+}
+.event small
+{
+    color: dimgray;
+    margin-left: 4px;
+}
+.event.done strong
+{
+    text-decoration: line-through;
+    color: grey;
+}
+.block-actions button
+{
+    background: none;
+    color: dimgray;
+    font-size: 11px;
+    padding: 2px 6px;
+}
+.event-actions button:hover
+{
+    background: none;
+    color: crimson;
+}
+.preview
+{
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    background: lightsteelblue;
+    opacity: 0.6;
+    border-radius: 6px;
+    pointer-events: none;
+}

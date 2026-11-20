@@ -13,7 +13,8 @@ const startInput = document.getElementById("start");
 const endInput = document.getElementById("end");
 const categoryInput = document.getElementById("category");
 const message = document.getElementById("message");
-const timeline = document.getElementById("timeline");
+const hourLabels = document.getElementById("hour-labels");
+const dayColumn = document.getElementById("day-column");
 const todayDate = document.getElementById("today-date");
 
 //loading the data to some block
@@ -29,11 +30,30 @@ function saveBlocks()
 }
 
 //blocks adjustment
+//time math
 function timeToMinutes(time)
 {
    const[hours,minutes] = time.split(":").map(Number);
    return hours * 60 + minutes;
 }
+function minutesToTime(total)
+{
+    const hours = Math.floor(total / 60);
+    const minutes = total % 60;
+    return String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
+}
+function minutesToPixels(total)
+{
+    // for considering height
+    return(total - START_HOUR * 60)/60 * HOUR_HEIGHT;
+}
+function pixelToMinutes(pixels)
+{
+    const minutesFromTop = pixels / HOUR_HEIGHT * 60;
+    const snapped = Math.round(minutesFromTop / SNAP) * SNAP;
+    return START_HOUR * 60 + snapped;
+}
+
 function addBlock(title, start, end, category)
 {
     blocks.push(
@@ -52,6 +72,7 @@ function addBlock(title, start, end, category)
 }
 function deleteBlock(id)
 {
+   
     blocks = blocks.filter(function(block)
     {
            return block.id !== id;
@@ -74,6 +95,7 @@ function toggleDone(id)
     saveBlocks();
     render();
 }
+//submission form
      
      form.addEventListener("submit", function(event)
     {
@@ -99,41 +121,131 @@ function toggleDone(id)
     });
     if (clash) 
         {
-            message.textContent = `This clashes with "{clash.title}".`;
+            message.textContent = `This clashes with "${clash.title}".`;
             return;
     }
     addBlock(title,start,end,category);
     form.reset();
     message.textContent = "";
     });
+    //Draw the calendar
+    function drawHourLabels()
+    {
+        const totalHeight = (END_HOUR-START_HOUR) * HOUR_HEIGHT;
+        hourLabels.style.height = totalHeight + "px";
+        dayColumn.style.height = totalHeight + "px";
+        hourLabels.innerHTML = "";
+        for (let hour = START_HOUR; hour < END_HOUR; hour++) {
+            const label = document.createElement("div");
+            label.className = "hour-label";
+            label.style.height = HOUR_HEIGHT + "px";
+            label.textContent = minutesToTime(hour * 60);
+            hourLabels.appendChild(label);
+            
+        }
+    }
 
 //Drawing the actual timeline
 function render()
 {
-    timeline.innerHTML = "";
-    if (blocks.length === 0) 
-    {
-        timeline.innerHTML = '<p class = "empty">Nothing planned yet. Add your first block.</p>'
-        return;
-    }
-    const sorted = [...blocks].sort(function(a, b)
-    {
-        return timeToMinutes(a.start) - timeToMinutes(b.start);
-    });
-    sorted.forEach(function (block)
-    {
-        const card = document.createElement("div");
-        card.className = "block cat-" + block.category +  (block.done ? " done" : "");
-        card.innerHTML = `<div class="block-info"><strong>${block.title}</strong><br><small>${block.start} - ${block.end}</small></div>
+    //get rid of old blocks, but keep drag thingy
+    dayColumn.querySelectorAll(".event").forEach(function (el)
+{
+    el.remove();
+});
+blocks.forEach(function(block)
+{
+    const top = minutesToPixels(timeToMinutes(block.start));
+    const height = minutesToPixels(timeToMinutes(block.end)) - top;
+    const card = document.createElement("div");
+    card.className = "event cat-" + block.category + (block.done ? " done" : "");
+    card.style.top = top + "px";
+    card.style.height = height + "px";
+    card.innerHTML = `<strong>${block.title}</strong><small>${block.start} - ${block.end}</small>
     <div class="block-actions">
     <button data-action="toggle" data-id="${block.id}">${block.done ? "Undo" : "Done"}</button>
     <button data-action="delete" data-id="${block.id}">X</button>
     </div>`;
-        
-        timeline.appendChild(card);
-    });
+    dayColumn.appendChild(card);
+});
 }
-timeline.addEventListener("click", function(event)
+
+//dragging
+let dragStartY = null;
+let preview = null;
+function getPickedRange(event)
+{
+    const rect = dayColumn.getBoundingClientRect();
+    const currentY = event.clientY - rect.top;
+    // keep the drag inside the calendar
+    const topY = Math.max(0, Math.min(dragStartY, currentY));
+    const bottomY = Math.min(dayColumn.offsetHeight, Math.max(dragStartY, currentY));
+    let start = pixelToMinutes(topY);
+    let end = pixelToMinutes(bottomY);
+
+    // at least some minutes long
+    if (end - start < SNAP) {
+        end = start + SNAP;
+    }
+
+    return { start: start, end: end };
+}
+function updatePreview(event)
+{
+    const picked = getPickedRange(event);
+    const top = minutesToPixels(picked.start);
+    const bottom = minutesToPixels(picked.end);
+    preview.style.top = top + "px";
+    preview.style.height = (bottom - top) + "px";
+
+}
+dayColumn.addEventListener("pointerdown", function(event)
+{
+   if (event.target.closest(".event")) {
+    return;
+   }
+   const rect = dayColumn.getBoundingClientRect();
+   dragStartY = event.clientY - rect.top;
+   preview = document.createElement("div");
+   preview.className = "preview";
+   dayColumn.appendChild(preview);
+   dayColumn.setPointerCapture(event.pointerId);
+   updatePreview(event);
+
+});
+dayColumn.addEventListener("pointermove", function(event)
+{
+    //no block on no dragging
+   if (dragStartY == null) 
+   {
+      return;
+   }
+   updatePreview(event);
+
+});
+dayColumn.addEventListener("pointerup", function(event)
+{
+    //no block on no dragging
+   if (dragStartY == null) 
+   {
+      return;
+   }
+   const picked = getPickedRange(event);
+   dragStartY = null;
+   preview.remove();
+   preview =  null;
+   //fill the form then let the user name the blockkkk...
+   startInput.value = minutesToTime(picked.start);
+   endInput.value = minutesToTime(picked.end);
+   message.textContent = "";
+   titleInput.focus();
+
+
+});
+//done and x buttons
+    
+    
+dayColumn.addEventListener("click", function(event)
 {
     const button = event.target.closest("button");
     if (!button) 
@@ -150,7 +262,9 @@ timeline.addEventListener("click", function(event)
         toggleDone(id);
     }
 });
+//start up
 todayDate.textContent = new Date().toLocaleDateString(undefined, {
     weekday: "long",day:"numeric",month:"long"
 });
+drawHourLabels();
 render();
