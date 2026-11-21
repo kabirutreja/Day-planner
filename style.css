@@ -25,7 +25,7 @@ header h1
     color: dimgray;
     margin: 4px 0 0;
 }
-.add-block,.timeline-section
+.add-block,.timeline-section,.status-section
 {
     background: white;
     border-radius: 12px;
@@ -200,3 +200,85 @@ button:hover
     border-radius: 6px;
     pointer-events: none;
 }
+.status-section
+{
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px lightgray;
+}
+.up-next
+{
+    background: whitesmoke;
+    border-left: 6px solid steelblue;
+    border-radius: 8px;
+    padding: 12px;
+}
+.up-label
+{
+    margin: 0 0 4px;
+    font-size: 12px;
+    color: dimgray;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.up-next strong
+{
+    display: block;
+    font-size: 17px;
+
+}
+.up-next small
+{
+    color: dimgray;
+}
+.next-label
+{
+    margin-top: 8px;
+    text-transform: none;
+    font-size: 13px;
+}
+.progress-text
+{
+    color: dimgray;
+    font-size: 14px;
+    margin: 14px 0 6px;
+}
+.progress-track
+{
+    background: lightgray;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.progress-fill
+{
+    height: 100%;
+    width: 0;
+    background: seagreen;
+    border-radius: 999px;
+    transition: width 0.3s;
+}
+.now-line
+{
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: tomato;
+    pointer-events: none;
+    z-index: 2;
+}
+.now-line::before
+{
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: tomato;
+}
+

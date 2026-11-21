@@ -16,6 +16,14 @@ const message = document.getElementById("message");
 const hourLabels = document.getElementById("hour-labels");
 const dayColumn = document.getElementById("day-column");
 const todayDate = document.getElementById("today-date");
+const upNext = document.getElementById("up-next");
+const progressText = document.getElementById("progress-text");
+const progressFill = document.getElementById("progress-fill");
+//red line
+const nowLine = document.createElement("div");
+nowLine.className = "now-line"
+dayColumn.appendChild(nowLine);
+
 
 //loading the data to some block
 function loadBlocks()
@@ -168,6 +176,7 @@ blocks.forEach(function(block)
     </div>`;
     dayColumn.appendChild(card);
 });
+updateLiveView();
 }
 
 //dragging
@@ -201,7 +210,8 @@ function updatePreview(event)
 }
 dayColumn.addEventListener("pointerdown", function(event)
 {
-   if (event.target.closest(".event")) {
+   if (event.target.closest(".event")) 
+    {
     return;
    }
    const rect = dayColumn.getBoundingClientRect();
@@ -262,9 +272,81 @@ dayColumn.addEventListener("click", function(event)
         toggleDone(id);
     }
 });
+//live view
+function getNowMinutes()
+{
+    const now = new Date();
+    return now.getHours()*60 + now.getMinutes();
+}
+//red line to the current time, or hide it outside
+function updateNowLine()
+{
+    const nowMinutes = getNowMinutes();
+    if (nowMinutes < START_HOUR * 60 || nowMinutes >= END_HOUR *60) 
+    {
+           nowLine.style.display = "none";
+           return;
+           
+    }
+     nowLine.style.display = "block";
+            nowLine.style.top = minutesToPixels(nowMinutes) + "px";
+}
+function updateUpNext()
+{
+    const nowMinutes = getNowMinutes();
+    // w on copy
+    const sorted = [...blocks].sort(function(a,b)
+{
+    return timeToMinutes(a.start) - timeToMinutes(b.start);
+});
+//exact block time
+const current = sorted.find(function(b)
+{
+    return timeToMinutes(b.start) <= nowMinutes && nowMinutes < timeToMinutes(b.end);
+});
+// block not started
+const next = sorted.find(function(b)
+{
+    return timeToMinutes(b.start) > nowMinutes;
+});
+let html = "";
+if (current) 
+{
+ html += `<p class="up-label">Now</p><strong>${current.title}</strong><small>until ${current.end}</small>`;    
+}
+else
+{
+    html += `<p class="up-label">Free right now</p>`;
+}
+if (next) 
+{
+const minutesLeft = timeToMinutes(next.start) - nowMinutes;
+html += `<p class="up-label next-label next-label">Up next: ${next.title} in ${minutesLeft} min</p>`;    
+}
+upNext.innerHTML = html;
+}
+function updateProgress()
+{
+    const total = blocks.length;
+    const doneCount = blocks.filter(function(b)
+{
+    return b.done;
+}).length;
+      const percent = total === 0 ? 0 : Math.round(doneCount/total*100);
+      progressText.textContent = doneCount + " of " + total + " blocks done";
+      progressFill.style.width = percent + "%";
+}
+function updateLiveView()
+{
+    updateNowLine();
+    updateUpNext();
+    updateProgress();
+}
 //start up
 todayDate.textContent = new Date().toLocaleDateString(undefined, {
     weekday: "long",day:"numeric",month:"long"
 });
 drawHourLabels();
 render();
+//update lessay 60 secs
+setInterval(updateLiveView,60000);
