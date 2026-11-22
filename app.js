@@ -24,6 +24,7 @@ const nowLine = document.createElement("div");
 const REMIND_MINUTES = 5; // warn befor what
 const notifyButton = document.getElementById("notify-btn");
 const reminderStatus = document.getElementById("reminder-status"); 
+let editingBlockId = null;
 const notifiedIds = new Set();
 const prevDaybtn = document.getElementById("prev-day");
 const nextDaybtn = document.getElementById("next-day");
@@ -78,7 +79,7 @@ function showDay()
 {
 //update day
 const d = new Date(currentDate + "T00:00:00");
-const label = d.toLocaleTimeString(undefined, 
+const label = d.toLocaleDateString(undefined, 
     {
         weekday: "long",
         day: "numeric",
@@ -195,11 +196,7 @@ function toggleDone(id)
             message.textContent = "End time must be after start time.";
             return;
         }
-        const clash = blocks.find(function(b)
-    {
-        return timeToMinutes(start) < timeToMinutes(b.end) && timeToMinutes(end) > timeToMinutes(b.start);
-
-    });
+        const clash = findClash(start, end, editingBlockId);
     if (clash) 
         {
             message.textContent = `This clashes with "${clash.title}".`;
@@ -234,7 +231,7 @@ function render()
 {
     el.remove();
 });
-blocks.forEach(function(block)
+dayBlocks().forEach(function(block)
 {
     const top = minutesToPixels(timeToMinutes(block.start));
     const height = minutesToPixels(timeToMinutes(block.end)) - top;
@@ -425,6 +422,11 @@ function getNowMinutes()
 //red line to the current time, or hide it outside
 function updateNowLine()
 {
+    if(currentDate != dateKey())
+    {
+        nowLine.style.display = "none";
+        return;
+    }
     const nowMinutes = getNowMinutes();
     if (nowMinutes < START_HOUR * 60 || nowMinutes >= END_HOUR *60) 
     {
@@ -439,7 +441,7 @@ function updateUpNext()
 {
     const nowMinutes = getNowMinutes();
     // w on copy
-    const sorted = [...blocks].sort(function(a,b)
+    const sorted = [...dayBlocks()].sort(function(a,b)
 {
     return timeToMinutes(a.start) - timeToMinutes(b.start);
 });
@@ -471,8 +473,10 @@ upNext.innerHTML = html;
 }
 function updateProgress()
 {
-    const total = blocks.length;
-    const doneCount = blocks.filter(function(b)
+    
+    const today = dayBlocks();
+    const total = today.length;
+    const doneCount = today.filter(function(b)
 {
     return b.done;
 }).length;
@@ -483,7 +487,7 @@ function updateProgress()
 function updateTotals()
 {
     const totals = {};
-    blocks.forEach(function(block)
+    dayBlocks().forEach(function(block)
 {
     const minutes = timeToMinutes(block.end) - timeToMinutes(block.start);
     totals[block.category] = (totals[block.category] || 0) + minutes; 
@@ -505,13 +509,24 @@ function updateLiveView()
     checkReminders();
     updateTotals();
 }
-//start up
-todayDate.textContent = new Date().toLocaleDateString(undefined, {
-    weekday: "long",day:"numeric",month:"long"
+prevDaybtn.addEventListener("click", function()
+{
+    shiftDay(-1);
 });
+nextDaybtn.addEventListener("click", function()
+{
+    shiftDay(1);
+});
+todayBtn.addEventListener("click", function()
+{
+    currentDate = dateKey();
+    showDay();
+});
+//start up
+
 updateReminderStatus();
 drawHourLabels();
-render();
+showDay();
 //update lessay 60 secs
 setInterval(updateLiveView,60000);
 //reminders
@@ -577,7 +592,11 @@ function checkReminders()
       return;  
     }
     const nowMinutes = getNowMinutes();
-    blocks.forEach(function(block)
+    blocks.filter(function(b)
+    {
+        return b.date === dateKey();
+
+    }).forEach(function(block)
 {
     if(block.done || notifiedIds.has(block.id))
     {
