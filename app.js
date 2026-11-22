@@ -25,6 +25,8 @@ const REMIND_MINUTES = 5; // warn befor what
 const notifyButton = document.getElementById("notify-btn");
 const reminderStatus = document.getElementById("reminder-status"); 
 let editingBlockId = null;
+const submitButton = form.querySelector('button[type = "submit"]');
+const cancelButton = document.getElementById("cancel-edit");
 const notifiedIds = new Set();
 const prevDaybtn = document.getElementById("prev-day");
 const nextDaybtn = document.getElementById("next-day");
@@ -177,6 +179,40 @@ function toggleDone(id)
     saveBlocks();
     render();
 }
+function startEditing(id)
+{
+    const block = blocks.find(function(b)
+{
+    return b.id === id;
+});
+if (!block) 
+{
+ return;    
+}
+editingBlockId = id;
+titleInput.value = block.category;
+submitButton.textContent = "Save changes";
+cancelButton.hidden = false;
+message.textContent = "Editing a block. Change the fields, then save.";
+titleInput.focus();
+}
+function stopEditing()
+{
+    editingBlockId = null;
+    submitButton.textContent = "Add block";
+    cancelButton.hidden = true;
+}
+function updateBlock(id, title, start, end, category)
+{
+   const block = blocks.find(function(b)
+{
+    return b.id === id;
+});
+if (!block) 
+    {
+    return;
+}
+}
 //submission form
      
      form.addEventListener("submit", function(event)
@@ -243,6 +279,8 @@ dayBlocks().forEach(function(block)
     card.innerHTML = `<strong>${block.title}</strong><small>${block.start} - ${block.end}</small>
     <div class="block-actions">
     <button data-action="toggle" data-id="${block.id}">${block.done ? "Undo" : "Done"}</button>
+    <button data-action="edit" data-id="${block.id}">Edit</button>
+
     <button data-action="delete" data-id="${block.id}">X</button>
     </div>
     <div class = "resize-handle"></div>`;

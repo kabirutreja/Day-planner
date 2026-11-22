@@ -321,7 +321,20 @@ button:hover
 .day-nav
 {
     display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
 }
+#today-date
+{
+    flex: 1;
+    color: dimgray;
+}
+.nav-btn
+{
+    padding: 4px 10px;
+}
+
 
 
 
