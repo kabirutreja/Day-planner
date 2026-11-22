@@ -21,8 +21,13 @@ const progressText = document.getElementById("progress-text");
 const progressFill = document.getElementById("progress-fill");
 //red line
 const nowLine = document.createElement("div");
+const REMIND_MINUTES = 5; // warn befor what
+const notifyButton = document.getElementById("notify-btn");
+const reminderStatus = document.getElementById("reminder-status"); 
+const notifiedIds = new Set();
 nowLine.className = "now-line"
 dayColumn.appendChild(nowLine);
+const categoryTotals = document.getElementById("category-totals");
 
 
 //loading the data to some block
@@ -173,7 +178,8 @@ blocks.forEach(function(block)
     <div class="block-actions">
     <button data-action="toggle" data-id="${block.id}">${block.done ? "Undo" : "Done"}</button>
     <button data-action="delete" data-id="${block.id}">X</button>
-    </div>`;
+    </div>
+    <div class = "resize-handle"></div>`;
     dayColumn.appendChild(card);
 });
 updateLiveView();
@@ -182,6 +188,8 @@ updateLiveView();
 //dragging
 let dragStartY = null;
 let preview = null;
+let editing = null;
+
 function getPickedRange(event)
 {
     const rect = dayColumn.getBoundingClientRect();
@@ -207,6 +215,46 @@ function updatePreview(event)
     preview.style.top = top + "px";
     preview.style.height = (bottom - top) + "px";
 
+}
+function updateEditing(event)
+{
+   const deltaMinutes = Math.round((event.clientY - editing.startY)/HOUR_HEIGHT * 60/SNAP) * SNAP;
+   const duration = editing.originalEnd - editing.originalStart;
+   const dayStart = START_HOUR * 60;
+   const dayEnd = END_HOUR * 60;
+   if (editing.mode === "move") 
+   {
+   editing.newStart = Math.min(Math.max(editing.originalStart + deltaMinutes, dayStart), dayEnd - duration);
+   editing.newEnd = editing.newStart + duration; 
+   }
+   else
+   {
+    editing.newStart = editing.originalStart;
+    editing.newEnd = Math.min(Math.max(editing.originalEnd + deltaMinutes, editing.originalStart + SNAP),dayEnd);
+    
+   }
+   editing.card.style.top = minutesToPixels(editing.newStart) + "px";
+   editing.card.style.height = (minutesToPixels(editing.newEnd) - minutesToPixels(editing.newStart)) + "px";
+
+}
+function finishEditing()
+{
+    const block = editing.block;
+    const newStart = minutesToTime(editing.newStart);
+    const newEnd = minutesToTime(editing.newEnd);
+    const clash = findClash(newStart, newEnd, block.id);
+    editing = null;
+    if (clash) 
+    {
+        message.textContent = `This would clash with "${clash.title}".`;
+        render(); //old spot 
+        return;
+    }
+    block.start = newStart;
+    block.end = newEnd;
+    message.textContent = "";
+    saveBlocks();
+    render();
 }
 dayColumn.addEventListener("pointerdown", function(event)
 {
@@ -321,7 +369,7 @@ else
 if (next) 
 {
 const minutesLeft = timeToMinutes(next.start) - nowMinutes;
-html += `<p class="up-label next-label next-label">Up next: ${next.title} in ${minutesLeft} min</p>`;    
+html += `<p class="up-label next-label">Up next: ${next.title} in ${minutesLeft} min</p>`;    
 }
 upNext.innerHTML = html;
 }
@@ -341,12 +389,93 @@ function updateLiveView()
     updateNowLine();
     updateUpNext();
     updateProgress();
+    checkReminders();
 }
 //start up
 todayDate.textContent = new Date().toLocaleDateString(undefined, {
     weekday: "long",day:"numeric",month:"long"
 });
+updateReminderStatus();
 drawHourLabels();
 render();
 //update lessay 60 secs
 setInterval(updateLiveView,60000);
+//reminders
+function reminderSupported()
+{
+    return "Notification" in window;
+}
+function updateReminderStatus()
+{
+    if(!reminderSupported())
+    {
+        reminderStatus.textContent = "Reminders aren't supported in the browser.";
+        notifyButton.style.display = "none";
+        return;
+    }
+    if (Notification.permission === "granted") 
+    {
+       reminderStatus.textContent = "Reminders are on.";
+       notifyButton.style.display = "none"; 
+    }
+    else if (Notification.permission === "denied") 
+    {
+    reminderStatus.textContent = "Reminders are blocked. Please allow in settings.";   
+    notifyButton.style.display = "none"; 
+    }
+    else
+    {
+        reminderStatus.textContent = "";
+        notifyButton.style.display = "inline-block";
+    }
+}
+notifyButton.addEventListener("click", function()
+{
+    Notification.requestPermission().then(updateReminderStatus);
+});
+//on screen wale notification(showing)
+function showReminder(block)
+{
+    //This block is copied from chatgpt coZ I was clueless on how to show it on screen
+    //{
+    try
+    {
+        const note = new Notification("Time to start: " + block.title, {
+              body: block.start + " - " + block.end
+        });
+        note.onclick = function()
+        {
+            window.focus();
+            note.close();
+        };
+
+    }
+    //}
+    catch(error)
+    {
+        console.log("Reminder could not show:" + error);
+    }
+}
+function checkReminders()
+{
+    if (!reminderSupported() || Notification.permission !== "granted") 
+    {
+      return;  
+    }
+    const nowMinutes = getNowMinutes();
+    blocks.forEach(function(block)
+{
+    if(block.done || notifiedIds.has(block.id))
+    {
+        return;
+    }
+    const minutesLeft = timeToMinutes(block.start) - nowMinutes;
+    //actual not
+    if (minutesLeft >= 0 && minutesLeft <= REMIND_MINUTES) 
+    {
+    showReminder(block);
+    notifiedIds.add(block.id);    
+    }
+})
+}
+

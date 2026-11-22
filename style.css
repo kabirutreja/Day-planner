@@ -167,6 +167,8 @@ button:hover
     font-size: 13px;
     overflow: hidden;
     box-shadow: 0 1px 2px lightgray;
+    /*to resize*/
+    cursor: grab;
 }
 .event small
 {
@@ -185,7 +187,7 @@ button:hover
     font-size: 11px;
     padding: 2px 6px;
 }
-.event-actions button:hover
+.block-actions button:hover
 {
     background: none;
     color: crimson;
@@ -281,4 +283,30 @@ button:hover
     border-radius: 50%;
     background: tomato;
 }
+.notify-btn
+{
+    margin-top: 12px;
+    background: white;
+    color: black;
+    border: 1px solid black;
+}
+.notify-btn:hover
+{
+    background: whitesmoke;
+}
+.reminder-status
+{
+    color: dimgray;
+    font-size: 13px;
+    margin: 10px 0 0;
+}
+.resize-handle
+{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+
 
