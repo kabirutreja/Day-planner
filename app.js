@@ -54,6 +54,39 @@ function saveBlocks()
 {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
 }
+//a date as text
+function dateKey(d = new Date())
+{
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function dayBlocks()
+{
+    return blocks.filter(function(b)
+{
+    return b.date === currentDate;
+});
+}
+//forward and backward by some dates
+function shiftDay(days)
+{
+    const d = new Date(currentDate + "T00:00:00");
+    d.setDate(d.getDate() + days);
+    currentDate = dateKey(d);
+    showDay();
+}
+function showDay()
+{
+//update day
+const d = new Date(currentDate + "T00:00:00");
+const label = d.toLocaleTimeString(undefined, 
+    {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+    });
+    todayDate.textContent = currentDate === dateKey() ? "Today, " + label : label;
+    render();
+}
 
 //blocks adjustment
 //time math
@@ -83,7 +116,7 @@ function findClash(start, end, ignoreId)
 {
     const newStart = timeToMinutes(start);
     const newEnd = timeToMinutes(end);
-    return blocks.find(function(b)
+    return dayBlocks().find(function(b)
 {
     return b.id !== ignoreId && newStart < timeToMinutes(b.end) && newEnd > timeToMinutes (b.start);
 });
@@ -110,7 +143,8 @@ function addBlock(title, start, end, category)
             start: start,
             end: end,
             category: category,
-            done: false
+            done: false,
+            date: currentDate
 
         }
     );
