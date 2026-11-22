@@ -318,6 +318,10 @@ button:hover
     font-size: 13px;
     color: dimgray;
 }
+.day-nav
+{
+    display: flex;
+}
 
 
 

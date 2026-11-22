@@ -25,6 +25,10 @@ const REMIND_MINUTES = 5; // warn befor what
 const notifyButton = document.getElementById("notify-btn");
 const reminderStatus = document.getElementById("reminder-status"); 
 const notifiedIds = new Set();
+const prevDaybtn = document.getElementById("prev-day");
+const nextDaybtn = document.getElementById("next-day");
+const todayBtn = document.getElementById("today-btn");
+let currentDate = dateKey();
 nowLine.className = "now-line"
 dayColumn.appendChild(nowLine);
 const categoryTotals = document.getElementById("category-totals");
@@ -34,7 +38,16 @@ const categoryTotals = document.getElementById("category-totals");
 function loadBlocks()
 {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) :[];
+    const list = saved ? JSON.parse(saved) : [];
+    list.forEach(function (b)
+{
+    if (!b.date) 
+    {
+    b.date = dateKey();    
+    }
+});
+return list;
+    
 
 }
 function saveBlocks()
