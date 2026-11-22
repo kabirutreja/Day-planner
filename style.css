@@ -306,6 +306,17 @@ button:hover
     left: 0;
     right: 0;
     bottom: 0;
+    height: 8px;
+    cursor: ns-resize;
+}
+.totals
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: dimgray;
 }
 
 

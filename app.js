@@ -66,6 +66,27 @@ function pixelToMinutes(pixels)
     const snapped = Math.round(minutesFromTop / SNAP) * SNAP;
     return START_HOUR * 60 + snapped;
 }
+function findClash(start, end, ignoreId)
+{
+    const newStart = timeToMinutes(start);
+    const newEnd = timeToMinutes(end);
+    return blocks.find(function(b)
+{
+    return b.id !== ignoreId && newStart < timeToMinutes(b.end) && newEnd > timeToMinutes (b.start);
+});
+}
+//minutes to hr, min
+function formatMinutes(total)
+{
+    const hours = Math.floor(total/60);
+    const minutes = total % 60;
+    if (hours === 0) 
+    {
+       return minutes + "m";
+           
+    }
+    return minutes ? hours + "h " + minutes + "m" : hours + "h";
+}
 
 function addBlock(title, start, end, category)
 {
@@ -171,6 +192,7 @@ blocks.forEach(function(block)
     const top = minutesToPixels(timeToMinutes(block.start));
     const height = minutesToPixels(timeToMinutes(block.end)) - top;
     const card = document.createElement("div");
+    card.dataset.id = block.id;
     card.className = "event cat-" + block.category + (block.done ? " done" : "");
     card.style.top = top + "px";
     card.style.height = height + "px";
@@ -258,8 +280,33 @@ function finishEditing()
 }
 dayColumn.addEventListener("pointerdown", function(event)
 {
-   if (event.target.closest(".event")) 
+   if (event.target.closest("button")) 
     {
+    return;
+   }
+   const card = event.target.closest(".event");
+   if (card) 
+   {
+   const block = blocks.find(function(b)
+{
+    return b.id === Number(card.dataset.id);
+}) ;
+if (!block) 
+    {
+    return
+    };
+    editing = {
+        block: block,
+        card: card,
+        mode: event.target.classList.contains("resize-handle")?"resize":"move",
+        startY: event.clientY,
+        originalStart: timeToMinutes(block.start),
+        originalEnd: timeToMinutes(block.end),
+        newStart: timeToMinutes(block.start),
+        newEnd: timeToMinutes(block.end)
+
+    };
+    dayColumn.setPointerCapture(event.pointerId);
     return;
    }
    const rect = dayColumn.getBoundingClientRect();
@@ -273,32 +320,34 @@ dayColumn.addEventListener("pointerdown", function(event)
 });
 dayColumn.addEventListener("pointermove", function(event)
 {
-    //no block on no dragging
-   if (dragStartY == null) 
-   {
-      return;
-   }
-   updatePreview(event);
+    if (editing)
+    {
+        updateEditing(event);
+        return;
+    }
 
+    if (dragStartY === null) return;
+    updatePreview(event);
 });
 dayColumn.addEventListener("pointerup", function(event)
 {
-    //no block on no dragging
-   if (dragStartY == null) 
-   {
-      return;
-   }
-   const picked = getPickedRange(event);
-   dragStartY = null;
-   preview.remove();
-   preview =  null;
-   //fill the form then let the user name the blockkkk...
-   startInput.value = minutesToTime(picked.start);
-   endInput.value = minutesToTime(picked.end);
-   message.textContent = "";
-   titleInput.focus();
+    if (editing)
+    {
+        finishEditing();
+        return;
+    }
 
+    if (dragStartY === null) return;
 
+    const picked = getPickedRange(event);
+    dragStartY = null;
+    preview.remove();
+    preview = null;
+
+    startInput.value = minutesToTime(picked.start);
+    endInput.value = minutesToTime(picked.end);
+    message.textContent = "";
+    titleInput.focus();
 });
 //done and x buttons
     
@@ -384,12 +433,30 @@ function updateProgress()
       progressText.textContent = doneCount + " of " + total + " blocks done";
       progressFill.style.width = percent + "%";
 }
+function updateTotals()
+{
+    const totals = {};
+    blocks.forEach(function(block)
+{
+    const minutes = timeToMinutes(block.end) - timeToMinutes(block.start);
+    totals[block.category] = (totals[block.category] || 0) + minutes; 
+});
+const parts = Object.keys(totals).map(function(category)
+{
+  //show the option text
+  const option = categoryInput.querySelector(`option[value="${category}"]`);
+  const label = option ? option.textContent : category;
+  return `<span>${label}: ${formatMinutes(totals[category])}</span>`;
+});
+categoryTotals.innerHTML = parts.join("");
+}
 function updateLiveView()
 {
     updateNowLine();
     updateUpNext();
     updateProgress();
     checkReminders();
+    updateTotals();
 }
 //start up
 todayDate.textContent = new Date().toLocaleDateString(undefined, {
