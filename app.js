@@ -215,6 +215,32 @@ function toggleDone(id)
     saveBlocks();
     render();
 }
+function clearFinished()
+{
+    const finished = dayBlocks().filter(function (b)
+{
+    return b.done;
+});
+if (finishEditing.length === 0) 
+    {
+        message.textContent = "No finished blocks to clear";
+        return;
+    
+    }
+    if (!confirm("Confirm Remove " + finished.length + " finished block(s) from this day?")) 
+    {
+        return;
+        
+    }
+    //keep blocks not finished
+    blocks = blocks.filter(function(b)
+{
+   return !(b.done && b.date === currentDate);
+});
+saveBlocks();
+render();
+message.textContent = "Cleared " + finished.length + " finished block(s)";
+}
 function startEditing(id)
 {
     const block = blocks.find(function(b)
@@ -621,6 +647,7 @@ todayBtn.addEventListener("click", function()
     showDay();
 });
 //start up
+document.getElementById("clear-done-btn").addEventListener("click", clearFinished);
 undoBtn.addEventListener("click", undoDelete);
 cancelButton.addEventListener("click",function()
 {
