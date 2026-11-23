@@ -334,6 +334,12 @@ button:hover
 {
     padding: 4px 10px;
 }
+.cancel-btn
+{
+    background: white;
+    color: black;
+    border: 1px solid black;
+}
 
 
 

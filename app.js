@@ -190,7 +190,10 @@ if (!block)
  return;    
 }
 editingBlockId = id;
-titleInput.value = block.category;
+titleInput.value = block.title;
+startInput.value = block.start;
+endInput.value = block.end;
+categoryInput.value = block.category;
 submitButton.textContent = "Save changes";
 cancelButton.hidden = false;
 message.textContent = "Editing a block. Change the fields, then save.";
@@ -198,9 +201,21 @@ titleInput.focus();
 }
 function stopEditing()
 {
-    editingBlockId = null;
-    submitButton.textContent = "Add block";
-    cancelButton.hidden = true;
+       const block = blocks.find(function(b)
+{
+    return b.id === id;
+});
+if(!block)
+{
+    return;
+}
+block.title = title;
+block.start = start;
+block.end = end;
+block.category = category;
+
+saveBlocks();
+render();
 }
 function updateBlock(id, title, start, end, category)
 {
@@ -212,6 +227,39 @@ if (!block)
     {
     return;
 }
+editingBlockId = id;
+titleInput.value = block.title;
+startInput.value = block.start;
+endInput.value = block.end;
+categoryInput.value = block.category;
+submitButton.textContent = "Save changes";
+cancelButton.hidden = false;
+message.textContent = "Editing a block. Change the properties and save.";
+titleInput.focus();
+}
+//get back to add modeee
+function stopEditing()
+{
+    editingBlockId = null;
+    submitButton.textContent = "Add block";
+    cancelButton.hidden = true;
+}
+function  updateBlock(id, title, start, end, category)
+{
+    const block = blocks.find(function (b)
+    {
+        return b.id === id;
+    });
+    if (!block) 
+    {
+    return;    
+    }
+    block.title = title;
+    block.start = start;
+    block.end = end;
+    block.category = category;
+    saveBlocks();
+    render();
 }
 //submission form
      
@@ -238,7 +286,15 @@ if (!block)
             message.textContent = `This clashes with "${clash.title}".`;
             return;
     }
-    addBlock(title,start,end,category);
+    if (editingBlockId === null) 
+    {
+        addBlock(title,start,end,category);    
+    }
+    else
+    {
+        updateBlock(editingBlockId, title, start, end, category);
+    }
+    stopEditing();
     form.reset();
     message.textContent = "";
     });
@@ -450,6 +506,10 @@ dayColumn.addEventListener("click", function(event)
     {
         toggleDone(id);
     }
+    else if (button.dataset.action === "edit") 
+    {
+    startEditing(id);    
+    }
 });
 //live view
 function getNowMinutes()
@@ -561,6 +621,13 @@ todayBtn.addEventListener("click", function()
     showDay();
 });
 //start up
+cancelButton.addEventListener("click",function()
+{
+    stopEditing();
+    form.reset();
+    message.textContent = "";
+
+})
 
 updateReminderStatus();
 drawHourLabels();
