@@ -27,6 +27,10 @@ const reminderStatus = document.getElementById("reminder-status");
 let editingBlockId = null;
 const submitButton = form.querySelector('button[type = "submit"]');
 const cancelButton = document.getElementById("cancel-edit");
+//undo
+const undoBtn = document.getElementById("undo-btn");
+let lastDeleted = null;
+let undoTimer = null;
 const notifiedIds = new Set();
 const prevDaybtn = document.getElementById("prev-day");
 const nextDaybtn = document.getElementById("next-day");
@@ -156,11 +160,43 @@ function addBlock(title, start, end, category)
 }
 function deleteBlock(id)
 {
-   
-    blocks = blocks.filter(function(block)
+    const block = blocks.find(function (b)
+{
+    return b.id === id;
+});
+if (!block) 
     {
-           return block.id !== id;
+    return;
+    }
+    //remember first then deleet it
+    lastDeleted = block;
+    blocks = blocks.filter(function(b)
+    {
+        return b.id !== id;
     });
+    saveBlocks();
+    render();
+    message.textContent = `Deleted "${block.title}".`;
+    undoBtn.hidden = false;
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(function()
+{
+    lastDeleted = null;
+    undoBtn.hidden = true;
+},10000);
+       
+}
+function undoDelete()
+{
+    if (!lastDeleted) 
+    {
+    return;    
+    }
+    blocks.push(lastDeleted);
+    lastDeleted = null;
+    clearTimeout(undoTimer);
+    undoBtn.hidden = true;
+    message.textContent = "Block restored."
     saveBlocks();
     render();
 }
@@ -199,44 +235,8 @@ cancelButton.hidden = false;
 message.textContent = "Editing a block. Change the fields, then save.";
 titleInput.focus();
 }
-function stopEditing()
-{
-       const block = blocks.find(function(b)
-{
-    return b.id === id;
-});
-if(!block)
-{
-    return;
-}
-block.title = title;
-block.start = start;
-block.end = end;
-block.category = category;
 
-saveBlocks();
-render();
-}
-function updateBlock(id, title, start, end, category)
-{
-   const block = blocks.find(function(b)
-{
-    return b.id === id;
-});
-if (!block) 
-    {
-    return;
-}
-editingBlockId = id;
-titleInput.value = block.title;
-startInput.value = block.start;
-endInput.value = block.end;
-categoryInput.value = block.category;
-submitButton.textContent = "Save changes";
-cancelButton.hidden = false;
-message.textContent = "Editing a block. Change the properties and save.";
-titleInput.focus();
-}
+
 //get back to add modeee
 function stopEditing()
 {
@@ -621,6 +621,7 @@ todayBtn.addEventListener("click", function()
     showDay();
 });
 //start up
+undoBtn.addEventListener("click", undoDelete);
 cancelButton.addEventListener("click",function()
 {
     stopEditing();
