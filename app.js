@@ -221,7 +221,7 @@ function clearFinished()
 {
     return b.done;
 });
-if (finishEditing.length === 0) 
+if (finished.length === 0) 
     {
         message.textContent = "No finished blocks to clear";
         return;
@@ -240,6 +240,47 @@ if (finishEditing.length === 0)
 saveBlocks();
 render();
 message.textContent = "Cleared " + finished.length + " finished block(s)";
+}
+function copyYesterday()
+{
+    const d = new Date(currentDate + "T00:00:00");
+    d.setDate(d.getDate() - 1);
+    const yesterdayKey = dateKey(d);
+    const yesterdayBlocks = blocks.filter(function (b)
+{
+    return b.date === yesterdayKey;
+});
+if (yesterdayBlocks.length === 0) 
+{
+message.textContent = "Yesterday is empty like a void.";
+return;    
+}
+let copied = 0;
+let skipped = 0;
+
+yesterdayBlocks.forEach(function (old, index)
+{
+    //skipping up
+    const clash = findClash(old.start, old.end, null);
+    if (clash) 
+    {
+    skipped ++;
+    return;    
+    }
+    blocks.push({
+        id: Date.now() + index,
+        title: old.title,
+        start: old.start,
+        end: old.end,
+        category: old.category,
+        done: false,
+        date: currentDate
+    });
+    copied ++;
+});
+saveBlocks();
+render();
+message.textContent = "Copied " + copied + " block(s)." + (skipped > 0 ? " Skipped " + skipped + " that did clash" : "");
 }
 function startEditing(id)
 {
@@ -623,7 +664,12 @@ const parts = Object.keys(totals).map(function(category)
   const label = option ? option.textContent : category;
   return `<span>${label}: ${formatMinutes(totals[category])}</span>`;
 });
-categoryTotals.innerHTML = parts.join("");
+const dayTotal = Object.values(totals).reduce(function(sum, minutes)
+{
+    return sum + minutes;
+},0);
+const totalPart = dayTotal > 0 ? `<span><strong>Total: ${formatMinutes(dayTotal)}</strong></span>` : "";
+categoryTotals.innerHTML = parts.join("") + totalPart;
 }
 function updateLiveView()
 {
@@ -648,6 +694,7 @@ todayBtn.addEventListener("click", function()
 });
 //start up
 document.getElementById("clear-done-btn").addEventListener("click", clearFinished);
+document.getElementById("copy-yesterday-btn").addEventListener("click", copyYesterday);
 undoBtn.addEventListener("click", undoDelete);
 cancelButton.addEventListener("click",function()
 {
